@@ -99,10 +99,11 @@ gulp.task('imagemin', function() {
 
 // Call Watch
 gulp.task('watch', function() {
-	gulp.watch('src/templates/**/*.jade', ['jade']);
-	gulp.watch('src/styl/**/*.styl', ['stylus']);
-	gulp.watch('src/js/**/*.js', ['js']);
-	gulp.watch('src/img/**/*.{jpg,png,gif}', ['imagemin']);
+	gulp.watch('src/**/*.jade', ['jade', 'index']);
+	gulp.watch('src/**/*.styl', ['stylus']);
+	gulp.watch('src/**/*.js', ['js']);
+	gulp.watch('src/**/*.coffee', ['coffee']);
+	// gulp.watch('src/img/**/*.{jpg,png,gif}', ['imagemin']);
 });
 
 // Connect (Livereload)
