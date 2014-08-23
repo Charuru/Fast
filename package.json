@@ -12,6 +12,7 @@
     "gulp-if": "~1.0.0",
     "gulp-jade": "~0.5.0",
     "rupture": "~0.0.3",
+    "through2": "0.4.2",
     "gulp-uglify": "~0.2.1",
     "gulp-stylus": "~1.0.0"
   },
