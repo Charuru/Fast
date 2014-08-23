@@ -19,7 +19,29 @@ var env = require('minimist')(process.argv.slice(2)),
 	modRewrite = require('connect-modrewrite'),
 	imagemin = require('gulp-imagemin'),
 	karma = require('gulp-karma'),
+	through = require('through2'),
+	path = require('path'),
 	rsync = require('rsyncwrapper').rsync;
+
+function jadeClientRename() {
+  function transform(file, enc, callback) {
+    if (!file.isBuffer()) {
+      this.push(file);
+      callback();
+      return;
+    }
+
+    var funcName = path.basename(file.path, '.js');
+    var from = 'function template(locals) {';
+    var to = 'jade.tmpl["' + funcName + '"] = function (locals) {';
+    var contents = file.contents.toString().replace(from, to);
+    file.contents = new Buffer(contents);
+    this.push(file);
+    callback();
+  }
+  return through.obj(transform);
+}
+
 
 // Call Jade for compile Templates
 gulp.task('jade', function() {
@@ -28,7 +50,18 @@ gulp.task('jade', function() {
 			pretty: !env.p,
 			client: true
 		}))
-		.pipe(gulp.dest('build/tmpl/'))
+    .pipe(jadeClientRename())
+		.pipe(concat('tmpl.js'))
+		.pipe(gulp.dest('build/js'))
+		.pipe(connect.reload());
+});
+
+gulp.task('pages', function() {
+	return gulp.src('src/pages/**/*.jade')
+		.pipe(jade({
+			pretty: !env.p,
+		}))
+		.pipe(gulp.dest('build/pages/'))
 		.pipe(connect.reload());
 });
 
@@ -99,7 +132,7 @@ gulp.task('imagemin', function() {
 
 // Call Watch
 gulp.task('watch', function() {
-	gulp.watch('src/**/*.jade', ['jade', 'index']);
+	gulp.watch('src/**/*.jade', ['jade', 'index', 'pages']);
 	gulp.watch('src/**/*.styl', ['stylus']);
 	gulp.watch('src/**/*.js', ['js']);
 	gulp.watch('src/**/*.coffee', ['coffee']);
@@ -138,6 +171,6 @@ gulp.task('deploy', function() {
 });
 
 // Default task
-gulp.task('default', ['index', 'vendorcss', 'vendorjs', 'js', 'jade', 'stylus', 'imagemin', 'watch', 'connect']);
+gulp.task('default', ['index', 'vendorcss', 'vendorjs', 'js', 'pages', 'jade', 'stylus', 'imagemin', 'watch', 'connect']);
 // Build and Deploy
-gulp.task('build', ['index', 'vendorcss', 'vendorjs', 'js', 'jade', 'stylus', 'imagemin', 'deploy']);
+gulp.task('build', ['index', 'vendorcss', 'vendorjs', 'js', 'pages', 'jade', 'stylus', 'imagemin', 'deploy']);
